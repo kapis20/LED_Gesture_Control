@@ -73,6 +73,23 @@ def fingers_up(lm, handedness_label):
 
     return fingers
 
+last_gesture = None
+
+def classify_gesture(f):
+    if f == [1,1,1,1,1]:
+        return "OPEN"
+    if f == [0,0,0,0,0]:
+        return "FIST"
+    if f == [0,1,0,0,0]:
+        return "INDEX"
+    if f == [0,1,1,0,0]:
+        return "PEACE"
+    if f == [1,0,0,0,0]:
+        return "THUMB"
+    return None
+
+
+
 with mp_hands.Hands(max_num_hands=1, min_detection_confidence=0.7, min_tracking_confidence=0.7) as hands:
     while True:
         ret, frame = cap.read()
@@ -101,6 +118,13 @@ with mp_hands.Hands(max_num_hands=1, min_detection_confidence=0.7, min_tracking_
                             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0), 2)
 
                 print("Fingers:", f)
+
+                # call gesture classification
+                gesture = classify_gesture(f)
+                if gesture != last_gesture and gesture is not None:
+                    text = f"Gesture: {gesture}"
+                    cv2.putText(frame, text, (10, 90),  
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0), 2)
 
             except Exception as e:
                 print("ERROR inside hand block:", repr(e))
