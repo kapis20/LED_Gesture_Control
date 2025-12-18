@@ -6,12 +6,19 @@ mp_draw = mp.solutions.drawing_utils
 
 cap = cv2.VideoCapture(0)
 
-def fingers_up(lm):
+def fingers_up(lm, handedness_label):
     # Returns list: [thumb, index, middle, ring, pinky]
     fingers = [0, 0, 0, 0, 0]
 
-    # THUMB (simple x-based rule; works well for many angles)
-    fingers[0] = 1 if lm[4].x > lm[3].x else 0
+    # Thumb: compare tip (4) with MCP (2) for a more stable baseline
+    # Right hand: extended thumb tends to have tip.x > mcp.x
+    # Left  hand: extended thumb tends to have tip.x < mcp.x
+    if handedness_label == "Right":
+        fingers[0] = 1 if lm[4].x > lm[2].x else 0
+    else:  # "Left"
+        fingers[0] = 1 if lm[4].x < lm[2].x else 0
+
+
 
     # Other fingers (y-based)
     fingers[1] = 1 if lm[8].y  < lm[6].y  else 0  # index
@@ -32,16 +39,27 @@ with mp_hands.Hands(max_num_hands=1, min_detection_confidence=0.7, min_tracking_
         results = hands.process(rgb)
 
         if results.multi_hand_landmarks:
-            hand = results.multi_hand_landmarks[0]
-            mp_draw.draw_landmarks(frame, hand, mp_hands.HAND_CONNECTIONS)
+            try:
+                hand = results.multi_hand_landmarks[0]
 
-            lm = hand.landmark
-            f = fingers_up(lm)
+                handedness_label = "Right"
+                if results.multi_handedness and len(results.multi_handedness) > 0:
+                    handedness_label = results.multi_handedness[0].classification[0].label  # "Left" or "Right"
 
-            text = f"Thumb:{f[0]} Index:{f[1]} Middle:{f[2]} Ring:{f[3]} Pinky:{f[4]}"
-            cv2.putText(frame, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0), 2)
+                mp_draw.draw_landmarks(frame, hand, mp_hands.HAND_CONNECTIONS)
 
-            print("Fingers:", f)
+                lm = hand.landmark
+                f = fingers_up(lm, handedness_label)
+
+                text = f"Thumb:{f[0]} Index:{f[1]} Middle:{f[2]} Ring:{f[3]} Pinky:{f[4]}"
+                cv2.putText(frame, text, (10, 30),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0), 2)
+
+                print("Fingers:", f)
+
+            except Exception as e:
+                print("ERROR inside hand block:", repr(e))
+
 
         cv2.imshow("Finger Detection", frame)
         if (cv2.waitKey(1) & 0xFF) == ord("q"):
