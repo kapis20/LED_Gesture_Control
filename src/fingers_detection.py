@@ -1,16 +1,40 @@
 import cv2
 import mediapipe as mp
 
+import numpy as np
+
+
 mp_hands = mp.solutions.hands
 mp_draw = mp.solutions.drawing_utils
 
 cap = cv2.VideoCapture(0)
 
-def is_palm_facing(lm):
-    palm_z = lm[9].z          # center of palm
-    knuckle_z = (lm[5].z + lm[17].z) / 2.0
 
-    return palm_z < knuckle_z
+def palm_normal_z(lm):
+    # 3D points
+    p0 = np.array([lm[0].x, lm[0].y, lm[0].z])   # wrist
+    p5 = np.array([lm[5].x, lm[5].y, lm[5].z])   # index MCP
+    p17 = np.array([lm[17].x, lm[17].y, lm[17].z]) # pinky MCP
+
+    v1 = p5 - p0
+    v2 = p17 - p0
+    n = np.cross(v1, v2)  # normal vector
+    return n[2]   
+
+# Put this near the top (outside loop)
+palm_sign = None   # will be +1 or -1 after calibration
+
+def is_palm_facing(lm):
+    global palm_sign
+    nz = palm_normal_z(lm)
+
+    # Calibrate the first time you show your PALM to the camera
+    if palm_sign is None:
+        palm_sign = 1 if nz > 0 else -1
+        print("Calibrated palm_sign =", palm_sign)
+
+    # After calibration: palm facing if nz has same sign as palm_sign
+    return (nz * palm_sign) > 0
 
 def fingers_up(lm, handedness_label):
     # Returns list: [thumb, index, middle, ring, pinky]
