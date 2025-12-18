@@ -6,6 +6,12 @@ mp_draw = mp.solutions.drawing_utils
 
 cap = cv2.VideoCapture(0)
 
+def is_palm_facing(lm):
+    palm_z = lm[9].z          # center of palm
+    knuckle_z = (lm[5].z + lm[17].z) / 2.0
+
+    return palm_z < knuckle_z
+
 def fingers_up(lm, handedness_label):
     # Returns list: [thumb, index, middle, ring, pinky]
     fingers = [0, 0, 0, 0, 0]
@@ -13,10 +19,16 @@ def fingers_up(lm, handedness_label):
     # Thumb: compare tip (4) with MCP (2) for a more stable baseline
     # Right hand: extended thumb tends to have tip.x > mcp.x
     # Left  hand: extended thumb tends to have tip.x < mcp.x
+    #check palm orientation
+    palm_facing = is_palm_facing(lm)
+    text = "Palm Facing" if palm_facing else "Palm Not Facing"
+    cv2.putText(frame, text, (10, 60),  
+                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0), 2)    
     if handedness_label == "Right":
-        fingers[0] = 1 if lm[4].x > lm[2].x else 0
-    else:  # "Left"
+        # Right hand lm is mirrored in webcam
         fingers[0] = 1 if lm[4].x < lm[2].x else 0
+    else:  # "Left"
+        fingers[0] = 1 if lm[4].x > lm[2].x else 0
 
 
 
