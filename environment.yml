@@ -1,0 +1,12 @@
+name: led-gesture-control
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.9
+  - pip
+  - pip:
+    - mediapipe>=0.8.9.1
+    - opencv-contrib-python>=4.6.0
+    - opencv-python>=4.6.0
+    - RPi.GPIO>=0.7.0  # For Raspberry Pi
