@@ -27,7 +27,9 @@ palm_sign = None   # will be +1 or -1 after calibration
 def is_palm_facing(lm):
     global palm_sign
     nz = palm_normal_z(lm)
-
+    #revert for right hand because of mirroring in webcam
+    if nz is not None and handedness_label == "Right":
+        nz = -nz
     # Calibrate the first time you show your PALM to the camera
     if palm_sign is None:
         palm_sign = 1 if nz > 0 else -1
