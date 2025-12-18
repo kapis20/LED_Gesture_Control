@@ -50,12 +50,19 @@ def fingers_up(lm, handedness_label):
     text = "Palm Facing" if palm_facing else "Palm Not Facing"
     cv2.putText(frame, text, (10, 60),  
                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0), 2)    
-    if handedness_label == "Right":
-        # Right hand lm is mirrored in webcam
-        fingers[0] = 1 if lm[4].x < lm[2].x else 0
-    else:  # "Left"
-        fingers[0] = 1 if lm[4].x > lm[2].x else 0
-
+    # if palm is not facing, we invert the logic for thumb detection
+    while palm_facing:            
+        if handedness_label == "Right":
+            # Right hand lm is mirrored in webcam
+            fingers[0] = 1 if lm[4].x < lm[2].x else 0
+        else:  # "Left"
+            fingers[0] = 1 if lm[4].x > lm[2].x else 0
+        break
+    else:
+        if handedness_label == "Right":
+            fingers[0] = 1 if lm[4].x > lm[2].x else 0
+        else:  # "Left"
+            fingers[0] = 1 if lm[4].x < lm[2].x else 0
 
 
     # Other fingers (y-based)
