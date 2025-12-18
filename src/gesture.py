@@ -33,16 +33,16 @@ with handsModule.Hands(static_image_mode=False, min_detection_confidence=0.7, mi
                   drawingModule.draw_landmarks(frame1, handLandmarks, handsModule.HAND_CONNECTIONS)
                   
                   #Below is Added Code to find and print to the shell the Location X-Y coordinates of Index Finger, Uncomment if desired
-                  #for point in handsModule.HandLandmark:
+                  for point in handsModule.HandLandmark:
                       
-                      #normalizedLandmark = handLandmarks.landmark[point]
-                      #pixelCoordinatesLandmark= drawingModule._normalized_to_pixel_coordinates(normalizedLandmark.x, normalizedLandmark.y, 640, 480)
+                      normalizedLandmark = handLandmarks.landmark[point]
+                      pixelCoordinatesLandmark= drawingModule._normalized_to_pixel_coordinates(normalizedLandmark.x, normalizedLandmark.y, 640, 480)
                       
                       #Using the Finger Joint Identification Image we know that point 8 represents the tip of the Index Finger
-                      #if point == 8:
-                          #print(point)
-                          #print(pixelCoordinatesLandmark)
-                          #print(normalizedLandmark)
+                      if point == 8:
+                          print(point)
+                          print(pixelCoordinatesLandmark)
+                          print(normalizedLandmark)
             
            #Below shows the current frame to the desktop 
            cv2.imshow("Frame", frame1);
