@@ -23,7 +23,7 @@ GESTURE_TO_CMD = {
     "OPEN":      "1\n",   # WHITE
     "PINKY":     "2\n",   # SAFE COOL
     "INDEX":     "6\n",   # KNIGHT RIDER
-    "FOUR":      "5\n",   # RAINBOW CHASE
+    "THREE":      "5\n",   # RAINBOW CHASE
     "SPIDERMAN": "7\n",   # SPARKLE
     "PEACE":     "4\n",   # RAINBOW SOLID
     "V_SIGN":    "3\n",   # BREATH WARM
@@ -101,7 +101,7 @@ FingerState = Tuple[int, int, int, int, int]
 OPEN      : FingerState = (0, 1, 1, 1, 1)
 FIST      : FingerState = (0, 0, 0, 0, 0)
 INDEX     : FingerState = (0, 1, 0, 0, 0)
-FOUR      : FingerState = (0, 1, 1, 0, 1)
+THREE      : FingerState = (0, 1, 1, 1, 0)
 SPIDERMAN : FingerState = (0, 1, 0, 0, 1)
 TWO       : FingerState = (0, 1, 1, 0, 0)
 PINKY     : FingerState = (0, 0, 0, 0, 1)
@@ -110,7 +110,7 @@ GESTURES_ANY = {
     OPEN: "OPEN",
     FIST: "FIST",
     INDEX: "INDEX",
-    FOUR: "FOUR",
+    THREE: "THREE",
     SPIDERMAN: "SPIDERMAN",
     PINKY: "PINKY",
 }
