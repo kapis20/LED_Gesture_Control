@@ -24,7 +24,7 @@ def palm_normal_z(lm):
 # Put this near the top (outside loop)
 palm_sign = None   # will be +1 or -1 after calibration
 
-def is_palm_facing(lm):
+def is_palm_facing(lm, handedness_label):
     global palm_sign
     nz = palm_normal_z(lm)
     #revert for right hand because of mirroring in webcam
@@ -38,6 +38,9 @@ def is_palm_facing(lm):
     # After calibration: palm facing if nz has same sign as palm_sign
     return (nz * palm_sign) > 0
 
+
+
+
 def fingers_up(lm, handedness_label):
     # Returns list: [thumb, index, middle, ring, pinky]
     fingers = [0, 0, 0, 0, 0]
@@ -46,7 +49,7 @@ def fingers_up(lm, handedness_label):
     # Right hand: extended thumb tends to have tip.x > mcp.x
     # Left  hand: extended thumb tends to have tip.x < mcp.x
     #check palm orientation
-    palm_facing = is_palm_facing(lm)
+    palm_facing = is_palm_facing(lm, handedness_label)
     text = "Palm Facing" if palm_facing else "Palm Not Facing"
     cv2.putText(frame, text, (10, 60),  
                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0), 2)    
@@ -54,15 +57,15 @@ def fingers_up(lm, handedness_label):
     while palm_facing:            
         if handedness_label == "Right":
             # Right hand lm is mirrored in webcam
-            fingers[0] = 1 if lm[4].x < lm[2].x else 0
-        else:  # "Left"
             fingers[0] = 1 if lm[4].x > lm[2].x else 0
+        else:  # "Left"
+            fingers[0] = 1 if lm[4].x < lm[2].x else 0
         break
     else:
         if handedness_label == "Right":
-            fingers[0] = 1 if lm[4].x > lm[2].x else 0
-        else:  # "Left"
             fingers[0] = 1 if lm[4].x < lm[2].x else 0
+        else:  # "Left"
+            fingers[0] = 1 if lm[4].x > lm[2].x else 0
 
 
     # Other fingers (y-based)
@@ -136,6 +139,7 @@ with mp_hands.Hands(max_num_hands=1, min_detection_confidence=0.7, min_tracking_
                 mp_draw.draw_landmarks(frame, hand, mp_hands.HAND_CONNECTIONS)
 
                 lm = hand.landmark
+                print(f'Lm landmarks: {[ (l.x, l.y, l.z) for l in lm ]}')
                 f = fingers_up(lm, handedness_label)
 
                 text = f"Thumb:{f[0]} Index:{f[1]} Middle:{f[2]} Ring:{f[3]} Pinky:{f[4]}"
@@ -145,7 +149,7 @@ with mp_hands.Hands(max_num_hands=1, min_detection_confidence=0.7, min_tracking_
                 print("Fingers:", f)
 
                 # call gesture classification
-                gesture = classify_gesture(f, palm_facing=is_palm_facing(lm))
+                gesture = classify_gesture(f, palm_facing=is_palm_facing(lm, handedness_label))
                 if gesture != last_gesture and gesture is not None:
                     text = f"Gesture: {gesture}"
                     cv2.putText(frame, text, (10, 90),  
