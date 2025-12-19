@@ -6,6 +6,12 @@ import numpy as np
 import serial
 import time
 
+SERIAL_PORT = "COM5"     # change this
+BAUD = 115200
+
+
+ser = serial.Serial(SERIAL_PORT, BAUD, timeout=0.1)
+time.sleep(2)  # let Arduino reset
 
 mp_hands = mp.solutions.hands
 mp_draw = mp.solutions.drawing_utils
@@ -141,7 +147,7 @@ with mp_hands.Hands(max_num_hands=1, min_detection_confidence=0.7, min_tracking_
 
                 mp_draw.draw_landmarks(frame, hand, mp_hands.HAND_CONNECTIONS)
 
-                lm = hand.landmarks
+                lm = hand.landmark
                 f = fingers_up(lm, handedness_label)
 
                 text = f"Thumb:{f[0]} Index:{f[1]} Middle:{f[2]} Ring:{f[3]} Pinky:{f[4]}"
