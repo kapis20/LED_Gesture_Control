@@ -18,6 +18,29 @@ mp_draw = mp.solutions.drawing_utils
 
 cap = cv2.VideoCapture(0)
 
+GESTURE_TO_CMD = {
+    "FIST":      "0\n",   # OFF
+    "OPEN":      "1\n",   # WHITE
+    "THUMB":     "2\n",   # SAFE COOL
+    "INDEX":     "6\n",   # KNIGHT RIDER
+    "FOUR":      "5\n",   # RAINBOW CHASE
+    "SPIDERMAN": "7\n",   # SPARKLE
+    "PEACE":     "4\n",   # RAINBOW SOLID
+    "V_SIGN":    "3\n",   # BREATH WARM
+}
+
+stable_gesture = None
+candidate = None
+candidate_count = 0
+STABLE_FRAMES = 6  # tweak
+
+last_sent = None
+
+def send_cmd(cmd: str):
+    ser.write(cmd.encode("utf-8"))
+    # optional: print what you sent
+    print(">>", cmd.strip())
+
 
 def palm_normal_z(lm):
     # 3D points
@@ -126,50 +149,74 @@ def classify_gesture(f: Sequence[int], palm_facing: bool = True) -> Optional[str
     return None
 
 
+try:
+    with mp_hands.Hands(max_num_hands=1, min_detection_confidence=0.7, min_tracking_confidence=0.7) as hands:
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                continue
 
-with mp_hands.Hands(max_num_hands=1, min_detection_confidence=0.7, min_tracking_confidence=0.7) as hands:
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            continue
+            frame = cv2.resize(frame, (640, 480))
+            rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            results = hands.process(rgb)
 
-        frame = cv2.resize(frame, (640, 480))
-        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = hands.process(rgb)
+            if results.multi_hand_landmarks:
+                try:
+                    hand = results.multi_hand_landmarks[0]
 
-        if results.multi_hand_landmarks:
-            try:
-                hand = results.multi_hand_landmarks[0]
+                    handedness_label = "Right"
+                    if results.multi_handedness and len(results.multi_handedness) > 0:
+                        handedness_label = results.multi_handedness[0].classification[0].label  # "Left" or "Right"
 
-                handedness_label = "Right"
-                if results.multi_handedness and len(results.multi_handedness) > 0:
-                    handedness_label = results.multi_handedness[0].classification[0].label  # "Left" or "Right"
+                    mp_draw.draw_landmarks(frame, hand, mp_hands.HAND_CONNECTIONS)
 
-                mp_draw.draw_landmarks(frame, hand, mp_hands.HAND_CONNECTIONS)
+                    lm = hand.landmark
+                    f = fingers_up(lm, handedness_label)
 
-                lm = hand.landmark
-                f = fingers_up(lm, handedness_label)
-
-                text = f"Thumb:{f[0]} Index:{f[1]} Middle:{f[2]} Ring:{f[3]} Pinky:{f[4]}"
-                cv2.putText(frame, text, (10, 30),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0), 2)
-
-                print("Fingers:", f)
-
-                # call gesture classification
-                gesture = classify_gesture(f, palm_facing=is_palm_facing(lm, handedness_label))
-                if gesture != last_gesture and gesture is not None:
-                    text = f"Gesture: {gesture}"
-                    cv2.putText(frame, text, (10, 90),  
+                    text = f"Thumb:{f[0]} Index:{f[1]} Middle:{f[2]} Ring:{f[3]} Pinky:{f[4]}"
+                    cv2.putText(frame, text, (10, 30),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0), 2)
 
-            except Exception as e:
-                print("ERROR inside hand block:", repr(e))
+                    print("Fingers:", f)
+
+                    # call gesture classification
+                    gesture = classify_gesture(f, palm_facing=is_palm_facing(lm, handedness_label))
+                    # if gesture != last_gesture and gesture is not None:
+                    #     text = f"Gesture: {gesture}"
+                    #     cv2.putText(frame, text, (10, 90),  
+                    #                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0), 2)
+                    # --- debounce ---
+                    if gesture == candidate:
+                        candidate_count += 1
+                    else:
+                        candidate = gesture
+                        candidate_count = 1
+
+                    if candidate_count >= STABLE_FRAMES and candidate is not None:
+                        stable_gesture = candidate
+
+                    # --- send on change ---
+                    if stable_gesture != last_sent:
+                        cmd = GESTURE_TO_CMD.get(stable_gesture)
+                        if cmd:
+                            send_cmd(cmd)
+                            last_sent = stable_gesture
+
+                                    # show it on screen
+                    cv2.putText(frame, f"Gesture: {stable_gesture}", (10, 90),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0), 2)
+
+                    
+
+                except Exception as e:
+                    print("ERROR inside hand block:", repr(e))
 
 
-        cv2.imshow("Finger Detection", frame)
-        if (cv2.waitKey(1) & 0xFF) == ord("q"):
-            break
+            cv2.imshow("Finger Detection", frame)
+            if (cv2.waitKey(1) & 0xFF) == ord("q"):
+                break
 
-cap.release()
-cv2.destroyAllWindows()
+finally:
+    cap.release()
+    cv2.destroyAllWindows()
+    ser.close()
