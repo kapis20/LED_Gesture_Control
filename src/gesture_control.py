@@ -3,6 +3,9 @@ import mediapipe as mp
 
 import numpy as np
 
+import serial
+import time
+
 
 mp_hands = mp.solutions.hands
 mp_draw = mp.solutions.drawing_utils
@@ -138,8 +141,7 @@ with mp_hands.Hands(max_num_hands=1, min_detection_confidence=0.7, min_tracking_
 
                 mp_draw.draw_landmarks(frame, hand, mp_hands.HAND_CONNECTIONS)
 
-                lm = hand.landmark
-                print(f'Lm landmarks: {[ (l.x, l.y, l.z) for l in lm ]}')
+                lm = hand.landmarks
                 f = fingers_up(lm, handedness_label)
 
                 text = f"Thumb:{f[0]} Index:{f[1]} Middle:{f[2]} Ring:{f[3]} Pinky:{f[4]}"
