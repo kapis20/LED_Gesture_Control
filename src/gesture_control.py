@@ -21,7 +21,7 @@ cap = cv2.VideoCapture(0)
 GESTURE_TO_CMD = {
     "FIST":      "0\n",   # OFF
     "OPEN":      "1\n",   # WHITE
-    "THUMB":     "2\n",   # SAFE COOL
+    "PINKY":     "2\n",   # SAFE COOL
     "INDEX":     "6\n",   # KNIGHT RIDER
     "FOUR":      "5\n",   # RAINBOW CHASE
     "SPIDERMAN": "7\n",   # SPARKLE
@@ -74,31 +74,14 @@ def is_palm_facing(lm, handedness_label):
 
 
 def fingers_up(lm, handedness_label):
-    # Returns list: [thumb, index, middle, ring, pinky]
     fingers = [0, 0, 0, 0, 0]
 
-    # Thumb: compare tip (4) with MCP (2) for a more stable baseline
-    # Right hand: extended thumb tends to have tip.x > mcp.x
-    # Left  hand: extended thumb tends to have tip.x < mcp.x
-    #check palm orientation
     palm_facing = is_palm_facing(lm, handedness_label)
-    text = "Palm Facing" if palm_facing else "Palm Not Facing"
-    cv2.putText(frame, text, (10, 60),  
-                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0), 2)    
-    # if palm is not facing, we invert the logic for thumb detection
-    while palm_facing:            
-        if handedness_label == "Right":
-            # Right hand lm is mirrored in webcam
-            fingers[0] = 1 if lm[4].x > lm[2].x else 0
-        else:  # "Left"
-            fingers[0] = 1 if lm[4].x < lm[2].x else 0
-        break
-    else:
-        if handedness_label == "Right":
-            fingers[0] = 1 if lm[4].x < lm[2].x else 0
-        else:  # "Left"
-            fingers[0] = 1 if lm[4].x > lm[2].x else 0
+    cv2.putText(frame, "Palm Facing" if palm_facing else "Palm Not Facing",
+                (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0), 2)
 
+    # IGNORE THUMB:
+    fingers[0] = 0
 
     # Other fingers (y-based)
     fingers[1] = 1 if lm[8].y  < lm[6].y  else 0  # index
@@ -115,21 +98,21 @@ from typing import Optional, Sequence, Tuple
 FingerState = Tuple[int, int, int, int, int]
 
 # Finger patterns
-OPEN      : FingerState = (1, 1, 1, 1, 1)
+OPEN      : FingerState = (0, 1, 1, 1, 1)
 FIST      : FingerState = (0, 0, 0, 0, 0)
 INDEX     : FingerState = (0, 1, 0, 0, 0)
-THUMB     : FingerState = (1, 0, 0, 0, 0)
-FOUR      : FingerState = (0, 1, 1, 1, 1)
-SPIDERMAN : FingerState = (1, 1, 0, 0, 1)
+FOUR      : FingerState = (0, 1, 1, 0, 1)
+SPIDERMAN : FingerState = (0, 1, 0, 0, 1)
 TWO       : FingerState = (0, 1, 1, 0, 0)
+PINKY     : FingerState = (0, 0, 0, 0, 1)
 
 GESTURES_ANY = {
     OPEN: "OPEN",
     FIST: "FIST",
     INDEX: "INDEX",
-    THUMB: "THUMB",
     FOUR: "FOUR",
     SPIDERMAN: "SPIDERMAN",
+    PINKY: "PINKY",
 }
 
 GESTURES_ORIENTED = {
