@@ -75,17 +75,42 @@ def fingers_up(lm, handedness_label):
 
 last_gesture = None
 
-def classify_gesture(f):
-    if f == [1,1,1,1,1]:
-        return "OPEN"
-    if f == [0,0,0,0,0]:
-        return "FIST"
-    if f == [0,1,0,0,0]:
-        return "INDEX"
-    if f == [0,1,1,0,0]:
-        return "PEACE"
-    if f == [1,0,0,0,0]:
-        return "THUMB"
+from typing import Optional, Sequence, Tuple
+
+FingerState = Tuple[int, int, int, int, int]
+
+# Finger patterns
+OPEN      : FingerState = (1, 1, 1, 1, 1)
+FIST      : FingerState = (0, 0, 0, 0, 0)
+INDEX     : FingerState = (0, 1, 0, 0, 0)
+THUMB     : FingerState = (1, 0, 0, 0, 0)
+FOUR      : FingerState = (0, 1, 1, 1, 1)
+SPIDERMAN : FingerState = (1, 1, 0, 0, 1)
+TWO       : FingerState = (0, 1, 1, 0, 0)
+
+GESTURES_ANY = {
+    OPEN: "OPEN",
+    FIST: "FIST",
+    INDEX: "INDEX",
+    THUMB: "THUMB",
+    FOUR: "FOUR",
+    SPIDERMAN: "SPIDERMAN",
+}
+
+GESTURES_ORIENTED = {
+    TWO: ("PEACE", "V_SIGN"),  # (palm, back)
+}
+
+def classify_gesture(f: Sequence[int], palm_facing: bool = True) -> Optional[str]:
+    state: FingerState = tuple(f)
+
+    if state in GESTURES_ANY:
+        return GESTURES_ANY[state]
+
+    if state in GESTURES_ORIENTED:
+        palm_gesture, back_gesture = GESTURES_ORIENTED[state]
+        return palm_gesture if palm_facing else back_gesture
+
     return None
 
 
@@ -120,7 +145,7 @@ with mp_hands.Hands(max_num_hands=1, min_detection_confidence=0.7, min_tracking_
                 print("Fingers:", f)
 
                 # call gesture classification
-                gesture = classify_gesture(f)
+                gesture = classify_gesture(f, palm_facing=is_palm_facing(lm))
                 if gesture != last_gesture and gesture is not None:
                     text = f"Gesture: {gesture}"
                     cv2.putText(frame, text, (10, 90),  
