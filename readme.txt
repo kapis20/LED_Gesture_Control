@@ -13,7 +13,9 @@ This repo contains:
 
 ## Demo Video
 
-[![Watch the demo video](https://raw.githubusercontent.com/<YOUR-USERNAME>/<YOUR-REPO>/main/assets/demo_thumbnail.png)](https://drive.google.com/file/d/1xDw4fCx2-SH803H9Xw2Jfc1-25vwOXAM/view?usp=sharing)
+▶️ **Watch the demo:**  
+https://drive.google.com/file/d/1xDw4fCx2-SH803H9Xw2Jfc1-25vwOXAM/view?usp=sharing
+
 
 
 **Pipeline**
