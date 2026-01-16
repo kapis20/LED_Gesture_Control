@@ -14,7 +14,7 @@ This repo contains:
 ## Demo Video
 
 ▶️ **Watch the demo:**  
-https://drive.google.com/file/d/1xDw4fCx2-SH803H9Xw2Jfc1-25vwOXAM/view?usp=sharing
+https://drive.google.com/file/d/16BvFjSczI1XbHaav_MEWYTPlCyCdUUpr/view?usp=sharing
 
 
 
