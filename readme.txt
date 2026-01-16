@@ -10,7 +10,11 @@ This repo contains:
 
 ---
 
-## Demo Overview
+
+## Demo Video
+
+[![Watch the demo video](https://raw.githubusercontent.com/<YOUR-USERNAME>/<YOUR-REPO>/main/assets/demo_thumbnail.png)](https://drive.google.com/file/d/1xDw4fCx2-SH803H9Xw2Jfc1-25vwOXAM/view?usp=sharing)
+
 
 **Pipeline**
 1. Webcam → Python (`opencv-python`)
